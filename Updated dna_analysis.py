@@ -3,10 +3,11 @@
 dna_analysis.py - A simple bioinformatics tool for DNA sequence analysis.
 
 This script provides functions to calculate GC content, generate reverse complements,
-and find motifs in DNA sequences. Includes error handling for invalid bases.
-Suitable for beginner-to-intermediate Python users interested in bioinformatics.
+find motifs in DNA sequences, and read multiple sequences from FASTA files. Includes
+error handling for invalid bases. Suitable for beginner-to-intermediate Python users
+interested in bioinformatics.
 
-Author: [Swarnendu Das]
+Author: [Your Name]
 Date: April 04, 2025
 """
 
@@ -26,6 +27,46 @@ def validate_dna_sequence(dna_sequence):
     
     if invalid_bases:
         raise ValueError(f"Invalid bases found: {invalid_bases}. Only A, T, G, C are allowed.")
+
+def read_fasta_file(file_path):
+    """
+    Read multiple DNA sequences from a FASTA file.
+
+    Args:
+        file_path (str): Path to the FASTA file
+
+    Returns:
+        dict: Dictionary with header (without '>') as key and sequence as value
+
+    Raises:
+        FileNotFoundError: If the file does not exist
+        ValueError: If the file is empty or has no sequence data
+    """
+    try:
+        with open(file_path, 'r') as file:
+            sequences = {}
+            current_header = None
+            current_sequence = ''
+            
+            for line in file:
+                line = line.strip()
+                if line.startswith('>'):
+                    if current_header and current_sequence:
+                        sequences[current_header] = current_sequence
+                    current_header = line[1:]  # Remove '>' from header
+                    current_sequence = ''
+                elif line:
+                    current_sequence += line
+            
+            # Add the last sequence
+            if current_header and current_sequence:
+                sequences[current_header] = current_sequence
+            
+            if not sequences:
+                raise ValueError("No sequence data found in FASTA file.")
+            return sequences
+    except FileNotFoundError:
+        raise FileNotFoundError(f"FASTA file not found: {file_path}")
 
 def calculate_gc_content(dna_sequence):
     """
@@ -94,38 +135,58 @@ def find_motif(dna_sequence, motif):
             positions.append(i + 1)  # 1-based indexing
     return positions
 
+def analyze_sequence(dna_sequence, motif, header=None):
+    """
+    Perform full analysis on a DNA sequence and print results.
+
+    Args:
+        dna_sequence (str): DNA sequence to analyze
+        motif (str): Motif to search for
+        header (str, optional): Sequence identifier for display
+    """
+    gc_percentage = calculate_gc_content(dna_sequence)
+    rev_comp = reverse_complement(dna_sequence)
+    motif_positions = find_motif(dna_sequence, motif)
+    base_counts = {
+        'A': dna_sequence.count('A'),
+        'T': dna_sequence.count('T'),
+        'G': dna_sequence.count('G'),
+        'C': dna_sequence.count('C')
+    }
+    
+    prefix = f"Sequence '{header}': " if header else "Default Sequence: "
+    print(f"{prefix}")
+    print(f"  DNA Sequence: {dna_sequence}")
+    print(f"  GC Content: {gc_percentage:.2f}%")
+    print(f"  Reverse Complement: {rev_comp}")
+    print(f"  Positions of motif '{motif}': {motif_positions}")
+    print(f"  Sequence Length: {len(dna_sequence)}")
+    print(f"  Base Counts: {base_counts}\n")
+
 def main():
-    """Main function to demonstrate DNA sequence analysis with error handling."""
-    # Sample DNA sequence (valid)
+    """Main function to demonstrate DNA sequence analysis with multi-sequence FASTA support."""
+    # Default sample DNA sequence (used if no file is provided)
     sample_dna = "ATGGCCATAGCTAGCTAGCTAGCGCGCGCTA"
     motif = "GCTA"
+    fasta_file = "sample_dna.fasta"  # Example FASTA file name
     
     try:
-        # Perform analyses
-        gc_percentage = calculate_gc_content(sample_dna)
-        rev_comp = reverse_complement(sample_dna)
-        motif_positions = find_motif(sample_dna, motif)
-        base_counts = {
-            'A': sample_dna.count('A'),
-            'T': sample_dna.count('T'),
-            'G': sample_dna.count('G'),
-            'C': sample_dna.count('C')
-        }
-        
-        # Display results
-        print(f"DNA Sequence: {sample_dna}")
-        print(f"GC Content: {gc_percentage:.2f}%")
-        print(f"Reverse Complement: {rev_comp}")
-        print(f"Positions of motif '{motif}': {motif_positions}")
-        print(f"Sequence Length: {len(sample_dna)}")
-        print(f"Base Counts: {base_counts}")
+        # Attempt to read from FASTA file if it exists, otherwise use sample_dna
+        try:
+            sequences = read_fasta_file(fasta_file)
+            print(f"Loaded {len(sequences)} sequence(s) from {fasta_file}")
+            for header, sequence in sequences.items():
+                analyze_sequence(sequence, motif, header)
+        except FileNotFoundError:
+            print(f"{fasta_file} not found. Using default sample sequence.")
+            analyze_sequence(sample_dna, motif)
         
         # Test with invalid sequence
         invalid_dna = "ATGCX"
-        print("\nTesting invalid sequence:")
+        print("Testing invalid sequence:")
         calculate_gc_content(invalid_dna)
         
-    except ValueError as e:
+    except (ValueError, FileNotFoundError) as e:
         print(f"Error: {e}")
 
 if __name__ == "__main__":
