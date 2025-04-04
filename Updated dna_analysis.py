@@ -2,12 +2,11 @@
 """
 dna_analysis.py - A simple bioinformatics tool for DNA sequence analysis.
 
-This script provides functions to calculate GC content, generate reverse complements,
-find motifs in DNA sequences, and read multiple sequences from FASTA files. Includes
-error handling for invalid bases. Suitable for beginner-to-intermediate Python users
-interested in bioinformatics.
+This script provides functions to calculate GC content, reverse complements,
+motif finding, melting temperature, and other properties for DNA sequences from
+FASTA files with multiple sequences. Includes error handling for invalid bases.
 
-Author: [Your Name]
+Author: [Swarnendu Das]
 Date: April 04, 2025
 """
 
@@ -58,7 +57,6 @@ def read_fasta_file(file_path):
                 elif line:
                     current_sequence += line
             
-            # Add the last sequence
             if current_header and current_sequence:
                 sequences[current_header] = current_sequence
             
@@ -89,6 +87,73 @@ def calculate_gc_content(dna_sequence):
     gc_count = dna_sequence.count('G') + dna_sequence.count('C')
     total_length = len(dna_sequence)
     return (gc_count / total_length) * 100
+
+def calculate_at_content(dna_sequence):
+    """
+    Calculate the AT content percentage of a DNA sequence.
+
+    Args:
+        dna_sequence (str): Input DNA sequence (e.g., "ATGC")
+
+    Returns:
+        float: AT percentage, or 0 if sequence is empty
+
+    Raises:
+        ValueError: If the sequence contains invalid bases
+    """
+    if not dna_sequence:
+        return 0
+    
+    validate_dna_sequence(dna_sequence)
+    dna_sequence = dna_sequence.upper()
+    at_count = dna_sequence.count('A') + dna_sequence.count('T')
+    total_length = len(dna_sequence)
+    return (at_count / total_length) * 100
+
+def calculate_melting_temp(dna_sequence):
+    """
+    Calculate the melting temperature (Tm) of a DNA sequence using the Wallace rule.
+    Tm = 2°C * (A+T) + 4°C * (G+C). Suitable for short sequences (< 50 bp).
+
+    Args:
+        dna_sequence (str): Input DNA sequence (e.g., "ATGC")
+
+    Returns:
+        float: Melting temperature in °C, or 0 if sequence is empty
+
+    Raises:
+        ValueError: If the sequence contains invalid bases
+    """
+    if not dna_sequence:
+        return 0
+    
+    validate_dna_sequence(dna_sequence)
+    dna_sequence = dna_sequence.upper()
+    at_count = dna_sequence.count('A') + dna_sequence.count('T')
+    gc_count = dna_sequence.count('G') + dna_sequence.count('C')
+    return (2 * at_count) + (4 * gc_count)
+
+def calculate_molecular_weight(dna_sequence):
+    """
+    Calculate the approximate molecular weight of a single-stranded DNA sequence.
+    Uses average weights: A=313.2, T=304.2, G=329.2, C=289.2 g/mol.
+
+    Args:
+        dna_sequence (str): Input DNA sequence (e.g., "ATGC")
+
+    Returns:
+        float: Molecular weight in g/mol, or 0 if sequence is empty
+
+    Raises:
+        ValueError: If the sequence contains invalid bases
+    """
+    if not dna_sequence:
+        return 0
+    
+    validate_dna_sequence(dna_sequence)
+    dna_sequence = dna_sequence.upper()
+    weights = {'A': 313.2, 'T': 304.2, 'G': 329.2, 'C': 289.2}
+    return sum(weights[base] for base in dna_sequence)
 
 def reverse_complement(dna_sequence):
     """
@@ -145,6 +210,9 @@ def analyze_sequence(dna_sequence, motif, header=None):
         header (str, optional): Sequence identifier for display
     """
     gc_percentage = calculate_gc_content(dna_sequence)
+    at_percentage = calculate_at_content(dna_sequence)
+    melting_temp = calculate_melting_temp(dna_sequence)
+    mol_weight = calculate_molecular_weight(dna_sequence)
     rev_comp = reverse_complement(dna_sequence)
     motif_positions = find_motif(dna_sequence, motif)
     base_counts = {
@@ -158,6 +226,9 @@ def analyze_sequence(dna_sequence, motif, header=None):
     print(f"{prefix}")
     print(f"  DNA Sequence: {dna_sequence}")
     print(f"  GC Content: {gc_percentage:.2f}%")
+    print(f"  AT Content: {at_percentage:.2f}%")
+    print(f"  Melting Temperature: {melting_temp:.1f}°C (Wallace rule)")
+    print(f"  Molecular Weight: {mol_weight:.1f} g/mol")
     print(f"  Reverse Complement: {rev_comp}")
     print(f"  Positions of motif '{motif}': {motif_positions}")
     print(f"  Sequence Length: {len(dna_sequence)}")
