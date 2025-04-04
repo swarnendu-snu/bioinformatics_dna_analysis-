@@ -1,0 +1,39 @@
+def read_fasta_file(file_path):
+    """
+    Read multiple DNA sequences from a FASTA file.
+
+    Args:
+        file_path (str): Path to the FASTA file
+
+    Returns:
+        dict: Dictionary with header (without '>') as key and sequence as value
+
+    Raises:
+        FileNotFoundError: If the file does not exist
+        ValueError: If the file is empty or has no sequence data
+    """
+    try:
+        with open(file_path, 'r') as file:
+            sequences = {}
+            current_header = None
+            current_sequence = ''
+            
+            for line in file:
+                line = line.strip()
+                if line.startswith('>'):
+                    if current_header and current_sequence:
+                        sequences[current_header] = current_sequence
+                    current_header = line[1:]  # Remove '>' from header
+                    current_sequence = ''
+                elif line:
+                    current_sequence += line
+            
+            # Add the last sequence
+            if current_header and current_sequence:
+                sequences[current_header] = current_sequence
+            
+            if not sequences:
+                raise ValueError("No sequence data found in FASTA file.")
+            return sequences
+    except FileNotFoundError:
+        raise FileNotFoundError(f"FASTA file not found: {file_path}")
