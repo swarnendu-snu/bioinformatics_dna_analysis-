@@ -16,4 +16,4 @@ A simple Python script for beginner-to-intermediate bioinformatics tasks, includ
 ## Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/[your-username]/bioinformatics_dna_analysis.git
+   git clone https://github.com/[swarnendu_snu]/bioinformatics_dna_analysis.git
